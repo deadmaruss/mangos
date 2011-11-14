@@ -235,7 +235,7 @@ void PlayerbotMgr::HandleMasterIncomingPacket(const WorldPacket& packet)
             return;
         }
 
-        // if master is logging out, log out all bots
+        // if master is logging out, log out all bots & remove them from group
         case CMSG_LOGOUT_REQUEST:
         {
             LogoutAllBots();
@@ -775,6 +775,7 @@ void PlayerbotMgr::LogoutAllBots()
         if (itr == GetPlayerBotsEnd()) break;
         Player* bot = itr->second;
         LogoutPlayerBot(bot->GetObjectGuid());
+        RemoveAllBotsFromGroup();                   ///-> If bot are logging out remove them group
     }
 }
 
@@ -845,59 +846,6 @@ void PlayerbotMgr::RemoveAllBotsFromGroup()
             m_master->GetGroup()->RemoveMember(bot->GetObjectGuid(), 0);
     }
 }
-
-/*void Creature::LoadBotMenu(Player *pPlayer)
-{
-
-    if (pPlayer->GetPlayerbotAI()) return;
-    ObjectGuid guid = pPlayer->GetObjectGuid();
-    uint32 accountId = sObjectMgr.GetPlayerAccountIdByGUID(guid);
-    std::string fromTable = "characters c";
-    std::string wherestr = "AND (c.guid<>";
-    if (botConfig.GetBoolDefault("PlayerbotAI.SharedBots", true))
-    {
-        fromTable = "characters c, character_social s";
-        wherestr = "OR (c.guid=s.guid AND flags & 1 AND s.note "_LIKE_" "_CONCAT3_("'%%'","'shared'","'%%'")" AND s.friend=";
-    }
-    QueryResult *result = CharacterDatabase.PQuery("SELECT DISTINCT c.guid, c.name, c.online FROM %s WHERE c.account='%d' %s'%u')", fromTable.c_str(), accountId, wherestr.c_str(), guid);
-    do
-    {
-        Field *fields = result->Fetch();
-        ObjectGuid guidlo = ObjectGuid(fields[0].GetUInt64());
-        std::string name = fields[1].GetString();
-        uint8 online = fields[2].GetUInt8();
-        std::string word = "";
-
-        if ((guid == ObjectGuid()) || (guid == guidlo))
-        {
-            //not found or himself
-        }
-        else
-        {
-            // if(sConfig.GetBoolDefault("PlayerbotAI.DisableBots", false)) return;
-            // create the manager if it doesn't already exist
-            if (!pPlayer->GetPlayerbotMgr())
-                pPlayer->SetPlayerbotMgr(new PlayerbotMgr(pPlayer));
-
-            if (pPlayer->GetPlayerbotMgr()->GetPlayerBot(guidlo) == NULL && online == 0) // add (if not already in game)
-            {
-                word += "Recruit ";
-                word += name;
-                word += " as a Bot.";
-                pPlayer->PlayerTalkClass->GetGossipMenu().AddMenuItem((uint8) 9, word, guidlo, GOSSIP_OPTION_BOT, word, false);
-            }
-            else if (pPlayer->GetPlayerbotMgr()->GetPlayerBot(guidlo) != NULL) // remove (if in game)
-            {
-                word += "Dismiss ";
-                word += name;
-                word += " from duty.";
-                pPlayer->PlayerTalkClass->GetGossipMenu().AddMenuItem((uint8) 0, word, guidlo, GOSSIP_OPTION_BOT, word, false);
-            }
-        }
-    }
-    while (result->NextRow());
-    delete result;
-}*/
 
 void Player::skill(std::list<uint32>& m_spellsToLearn)
 {
